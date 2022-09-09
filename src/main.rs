@@ -10,6 +10,9 @@ use piston::input::{RenderArgs, RenderEvent, UpdateEvent};
 use piston::window::WindowSettings;
 use piston::{Button, ButtonEvent, ButtonState, EventLoop, Key};
 
+use std::collections::LinkedList;
+use std::iter::FromIterator;
+
 pub struct Game {
     gl: GlGraphics,
     snake: Snake,
@@ -52,8 +55,7 @@ enum Direction {
 }
 
 pub struct Snake {
-    x: i32,
-    y: i32,
+    body: LinkedList<(i32, i32)>,
     direction: Direction,
 }
 
@@ -61,23 +63,33 @@ impl Snake {
     fn render(&self, gl: &mut GlGraphics, args: &RenderArgs) {
         let blue: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 
-        let square =
-            graphics::rectangle::square((self.x * 20) as f64, (self.y * 20) as f64, 20_f64);
+        let square: Vec<graphics::types::Rectangle> = self
+            .body
+            .iter()
+            .map(|&(x, y)| graphics::rectangle::square((x * 20) as f64, (y * 20) as f64, 20_f64))
+            .collect();
 
         gl.draw(args.viewport(), |context, gl| {
             let transform = context.transform;
 
-            graphics::rectangle(blue, square, transform, gl);
+            square
+                .into_iter()
+                .for_each(|square| graphics::rectangle(blue, square, transform, gl));
         });
     }
 
     fn update(&mut self) {
+        let mut head = (*self.body.front().expect("No body")).clone();
+
         match self.direction {
-            Direction::Left => self.x -= 1,
-            Direction::Right => self.x += 1,
-            Direction::Up => self.y -= 1,
-            Direction::Down => self.y += 1,
+            Direction::Left => head.0 -= 1,
+            Direction::Right => head.0 += 1,
+            Direction::Up => head.1 -= 1,
+            Direction::Down => head.1 += 1,
         }
+
+        self.body.push_front(head);
+        self.body.pop_back().unwrap();
     }
 }
 
@@ -94,8 +106,7 @@ fn main() {
     let mut game = Game {
         gl: GlGraphics::new(opengl),
         snake: Snake {
-            x: 0,
-            y: 0,
+            body: LinkedList::from_iter((vec![(0, 0), (0, 1)]).into_iter()),
             direction: Direction::Right,
         },
     };

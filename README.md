@@ -1,4 +1,4 @@
-# Rust Snake 🪱
+# Rust Snake 🐍
 
 My first rust game
 
