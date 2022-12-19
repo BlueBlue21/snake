@@ -1,8 +1,8 @@
 # Rust Snake 🐍
 
-My first rust game
+My first Rust based game
 
-Made with Rust!
+Made with Rust.
 
 ```bash
 # Build and run
